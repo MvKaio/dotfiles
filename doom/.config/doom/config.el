@@ -173,5 +173,6 @@
 ;; they are implemented.
 
 (after! competitive-companion
+  (competitive-companion-setup-evil)
   (setq competitive-companion-task-template-file "~/code/template.cpp")
   (setq competitive-companion-separate-stderr 1))
