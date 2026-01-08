@@ -15,7 +15,10 @@
   :recipe (:host github :repo "copilot-emacs/copilot.el" :files ("*.el")))
 (package! rainbow-mode)
 (package! competitive-companion
-  :recipe (:host github :repo "luishgh/competitive-companion.el"))
+  :recipe (:host github :repo "luishgh/competitive-companion.el" :branch "hotfix"))
+(package! typst-ts-mode :recipe (:host codeberg :repo "meow_king/typst-ts-mode"))
+(package! typst-preview
+  :recipe (:host github :repo "havarddj/typst-preview.el"))
 (package! telega)
 (package! org-reveal)
 (package! timu-rouge-theme)

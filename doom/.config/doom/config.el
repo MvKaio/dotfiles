@@ -27,6 +27,14 @@
    ("\\.mustache\\'" . web-mode)
    ("\\.djhtml\\'" . web-mode)))
 
+;; Typst Mode and eglot config
+(require 'typst-ts-mode)
+(add-to-list 'auto-mode-alist '("\\.typ\\'" . typst-ts-mode))
+(with-eval-after-load 'eglot
+  (add-to-list 'eglot-server-programs
+               '(typst-ts-mode . ("tinymist"))))
+(add-hook 'typst-ts-mode-hook 'eglot-ensure)
+
 ;; Github Copilot Configuration
 ;; accept completion from copilot and fallback to company
 (use-package! copilot
@@ -41,8 +49,8 @@
   (add-to-list 'copilot-indentation-alist '(cpp-mode 2))
   (add-to-list 'copilot-indentation-alist '(python-mode 2))
   (add-to-list 'copilot-indentation-alist '(text-mode 2))
-  (add-to-list 'copilot-indentation-alist '(emacs-lisp-mode 2))
-  )
+  (add-to-list 'copilot-indentation-alist '(emacs-lisp-mode 2)
+  (add-to-list 'copilot-indentation-alist '(typst-ts-mode 2))))
 
 ;; Github CopilotChat Models
 (gptel-make-gh-copilot "Copilot")
