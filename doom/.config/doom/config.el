@@ -45,12 +45,12 @@
               ("C-TAB" . 'copilot-accept-completion-by-word)
               ("C-<tab>" . 'copilot-accept-completion-by-word))
   :config
-  (add-to-list 'copilot-indentation-alist '(c-mode 2))
-  (add-to-list 'copilot-indentation-alist '(cpp-mode 2))
-  (add-to-list 'copilot-indentation-alist '(python-mode 2))
-  (add-to-list 'copilot-indentation-alist '(text-mode 2))
-  (add-to-list 'copilot-indentation-alist '(emacs-lisp-mode 2)
-  (add-to-list 'copilot-indentation-alist '(typst-ts-mode 2))))
+  (add-to-list 'copilot-indentation-alist '(c-mode 0))
+  (add-to-list 'copilot-indentation-alist '(cpp-mode 0))
+  (add-to-list 'copilot-indentation-alist '(python-mode 0))
+  (add-to-list 'copilot-indentation-alist '(text-mode 0))
+  (add-to-list 'copilot-indentation-alist '(emacs-lisp-mode 0)
+  (add-to-list 'copilot-indentation-alist '(typst-ts-mode 0))))
 
 ;; Github CopilotChat Models
 (gptel-make-gh-copilot "Copilot")
@@ -80,27 +80,30 @@
       :n "gr" #'lsp-find-references)
 
 ;; Maximize Buffer with <leader> z
-(defun toggle-maximize-buffer () "Maximize buffer"
+(defun toggle-maximize-buffer ()
+  "Maximize buffer, workspace aware."
   (interactive)
-  (if (= 1 (length (window-list)))
-    (jump-to-register '_)
+  (if (and (= 1 (length (window-list)))
+           (assoc 'maximized-state (persp-parameter 'maximized-state)))
+      (progn
+        (set-window-configuration (cdr (assoc 'maximized-state (persp-parameter 'maximized-state))))
+        (set-persp-parameter 'maximized-state nil))
     (progn
-      (window-configuration-to-register '_)
+      (set-persp-parameter 'maximized-state (list (cons 'maximized-state (current-window-configuration))))
       (delete-other-windows))))
+
 (map! :leader :desc "Toggle Maximize Buffer" :n "z" #'toggle-maximize-buffer)
 
 ;; Using zsh (?) in vterm
 (setq vterm-shell "/usr/bin/zsh")
-
-; configure telega
-(map! :map telega-chat-button-map "h" nil)
 
 (use-package! telega
   :commands telega
   :config
   (setq telega-completing-read-function 'completing-read
         telega-sticker-set-download 't
-        telega-emoji-use-images nil))
+        telega-emoji-use-images nil)
+  (map! :map telega-chat-button-map "h" nil))
 
 ; Fix Tex shell escape
 (setq-default TeX-shell-escape t)
@@ -172,7 +175,57 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
-(after! competitive-companion
+(use-package! competitive-companion
+  :config
   (competitive-companion-setup-evil)
   (setq competitive-companion-task-template-file "~/code/template.cpp")
-  (setq competitive-companion-separate-stderr 1))
+  (setq competitive-companion-separate-stderr 1)
+
+  ;; Variable to remember which buffer initiated the compile
+  (defvar my/cc-source-buffer nil)
+
+  (defun my/cc-copy-source-on-all-tests-passed (orig-fn &rest args)
+    "If all tests passed, copy source code to clipboard."
+    (let ((result (apply orig-fn args)))
+      (when (eq result t)
+        (let ((original-message (current-message)))
+          (with-current-buffer (or my/cc-source-buffer (current-buffer))
+            (kill-new (buffer-string)))
+          (message "%s Source code copied." (or original-message ""))))
+      result))
+
+  (advice-add #'competitive-companion-run-tests :around #'my/cc-copy-source-on-all-tests-passed)
+
+  (defun my/cc-run-tests-on-success (buf str)
+    "Hook to run CC tests if compilation finishes successfully."
+    ;; Check if compilation finished without errors
+    (when (string-match-p "finished" str)
+      ;; Close the compilation window
+      (ignore-errors (delete-window (get-buffer-window buf)))
+
+      ;; Ensure the source buffer is still alive
+      (when (buffer-live-p my/cc-source-buffer)
+        (with-current-buffer my/cc-source-buffer
+          ;; Determine the command to run, mirroring the logic in the
+          ;; interactive part of `competitive-companion-run-tests`.
+          (let ((command (or competitive-companion--current-command
+                             (funcall competitive-companion-guess-program (buffer-file-name)))))
+            (if command
+                (competitive-companion-run-tests command)
+              (warn "Could not guess command to run tests."))))))
+
+    ;; Clean up: remove this hook so it doesn't run on unrelated compilations
+    (remove-hook 'compilation-finish-functions #'my/cc-run-tests-on-success))
+
+  (defun my/cc-compile-and-run ()
+    "Compile current file, then run competitive-companion tests on success."
+    (interactive)
+    (setq my/cc-source-buffer (current-buffer))
+    (add-hook 'compilation-finish-functions #'my/cc-run-tests-on-success)
+    (if (fboundp 'recompile)
+        (recompile)
+      (call-interactively 'compile)))
+
+  ;; Bind to <leader> r
+  (map! :leader
+        :desc "CC Compile & Run" "r" #'my/cc-compile-and-run))
