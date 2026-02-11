@@ -221,6 +221,9 @@
     "Compile current file, then run competitive-companion tests on success."
     (interactive)
     (setq my/cc-source-buffer (current-buffer))
+    (let* ((filename (file-name-nondirectory buffer-file-name))
+           (basename (file-name-sans-extension filename)))
+           (setq compile-command (format "make -B %s" basename)))
     (add-hook 'compilation-finish-functions #'my/cc-run-tests-on-success)
     (if (fboundp 'recompile)
         (recompile)
