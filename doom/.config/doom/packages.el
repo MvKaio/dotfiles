@@ -23,6 +23,10 @@
 (package! org-reveal)
 (package! timu-rouge-theme)
 
+(package! shell-maker)
+(package! acp)
+(package! agent-shell)
+
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
 ;; (package! some-package)
 

@@ -9,6 +9,9 @@
 (setq user-full-name "Kaio Vieira"
       user-mail-address "kaiomassevieira@gmail.com")
 
+;; Make cpp-mode the default for .cpp files (not sure why it isn't already)
+(add-to-list 'auto-mode-alist '("\\.cpp\\'" . cpp-mode))
+
 ;; Github Codespaces
 (use-package! codespaces
   :config (codespaces-setup)
@@ -45,12 +48,12 @@
               ("C-TAB" . 'copilot-accept-completion-by-word)
               ("C-<tab>" . 'copilot-accept-completion-by-word))
   :config
-  (add-to-list 'copilot-indentation-alist '(c-mode 0))
-  (add-to-list 'copilot-indentation-alist '(cpp-mode 0))
-  (add-to-list 'copilot-indentation-alist '(python-mode 0))
-  (add-to-list 'copilot-indentation-alist '(text-mode 0))
-  (add-to-list 'copilot-indentation-alist '(emacs-lisp-mode 0)
-  (add-to-list 'copilot-indentation-alist '(typst-ts-mode 0))))
+  (add-to-list 'copilot-indentation-alist '(c-mode 2))
+  (add-to-list 'copilot-indentation-alist '(cpp-mode 2))
+  (add-to-list 'copilot-indentation-alist '(python-mode 2))
+  (add-to-list 'copilot-indentation-alist '(text-mode 2))
+  (add-to-list 'copilot-indentation-alist '(emacs-lisp-mode 2)
+  (add-to-list 'copilot-indentation-alist '(typst-ts-mode 2))))
 
 ;; Github CopilotChat Models
 (gptel-make-gh-copilot "Copilot")
@@ -97,8 +100,15 @@
 ;; Using zsh (?) in vterm
 (setq vterm-shell "/usr/bin/zsh")
 
+;; Make Doom vterm open in the current buffer's directory, not project root.
+(defadvice! kaio/+vterm-use-current-directory-a (orig-fn _arg display-fn)
+  :around #'+vterm--configure-project-root-and-display
+  (funcall orig-fn t display-fn))
+
 (use-package! telega
   :commands telega
+  :init
+  (setq telega-server-libs-prefix "/usr")
   :config
   (setq telega-completing-read-function 'completing-read
         telega-sticker-set-download 't
@@ -120,8 +130,8 @@
 ;; See 'C-h v doom-font' for documentation and more examples of what they
 ;; accept. For example:
 ;;
-(setq doom-font (font-spec :family "Iosevka Term" :size 30 :weight 'light)
-      doom-variable-pitch-font (font-spec :family "Iosevka" :size 31 :weight 'light))
+(setq doom-font (font-spec :family "Iosevka Term" :size 28 :weight 'light)
+      doom-variable-pitch-font (font-spec :family "Iosevka" :size 28 :weight 'light))
 ;;
 ;; If you or Emacs can't find your font, use 'M-x describe-font' to look them
 ;; up, `M-x eval-region' to execute elisp code, and 'M-x doom/reload-font' to
@@ -131,7 +141,7 @@
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
-(setq doom-theme 'timu-rouge)
+(setq doom-theme 'noctalia)
 
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
