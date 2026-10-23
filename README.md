@@ -24,7 +24,7 @@ so applications can still create generated files alongside them.
 | `doom` | Doom Emacs configuration |
 | `hypr` | Hyprland Lua settings, idle and sunset settings, and helper script |
 | `shell` | Zsh setup, Powerlevel10k preset, and asdf tool versions |
-| `noctalia` | Noctalia v5 profile and custom Emacs Dired template |
+| `noctalia` | Noctalia v5 profile, custom palettes, plugin manifest, and Emacs Dired template |
 | `kitty` | Kitty configuration |
 | `starship` | Starship prompt configuration |
 | `phone-webcam` | User service and executable camera script |
@@ -32,8 +32,10 @@ so applications can still create generated files alongside them.
 
 The Noctalia-generated `hyprland.conf`, `hypr/noctalia.lua`, color files,
 Doom theme, and Kitty theme are deliberately left to Noctalia to recreate.
-Start Noctalia after installing these packages so its templates can run. The
-Hyprland Lua settings tolerate the generated module being absent at first.
+Start Noctalia after installing these packages so its templates can run. Its
+plugin manifest records the enabled screen recorder; Noctalia can download
+the plugin from the configured source. The Hyprland Lua settings tolerate the
+generated module being absent at first.
 
 ## Private data and machine setup
 
