@@ -38,6 +38,21 @@
                '(typst-ts-mode . ("tinymist"))))
 (add-hook 'typst-ts-mode-hook 'eglot-ensure)
 
+;; rbx.el evil config
+(with-eval-after-load 'evil
+  (require 'rbx-evil))
+
+;; Kotlin Eglot config. Doom already manages the mode hooks and server lifecycle.
+(after! eglot
+  (setq eglot-connect-timeout 60
+        eglot-extend-to-xref t
+        eglot-report-progress t))
+
+(after! eglot
+  (add-to-list 'eglot-server-programs
+               '((kotlin-mode kotlin-ts-mode) . ("kotlin-lsp" "--stdio"))))
+
+
 ;; Github Copilot Configuration
 ;; accept completion from copilot and fallback to company
 (use-package! copilot
@@ -52,15 +67,39 @@
   (add-to-list 'copilot-indentation-alist '(cpp-mode 2))
   (add-to-list 'copilot-indentation-alist '(python-mode 2))
   (add-to-list 'copilot-indentation-alist '(text-mode 2))
-  (add-to-list 'copilot-indentation-alist '(emacs-lisp-mode 2)
-  (add-to-list 'copilot-indentation-alist '(typst-ts-mode 2))))
+  (add-to-list 'copilot-indentation-alist '(emacs-lisp-mode 2))
+  (add-to-list 'copilot-indentation-alist '(typst-ts-mode 2)))
 
-;; Github CopilotChat Models
-(gptel-make-gh-copilot "Copilot")
+;; Google AI (Gemini) Backend
+(setq gptel-model 'gemini-3.6-flash
+      gptel-backend (gptel-make-gemini "Google AI"
+                      :key (getenv "GEMINI_API_KEY")
+                      :stream t))
 
-;; Configuring default gptel backend & model
-(setq gptel-backend (alist-get "Copilot" gptel--known-backends nil nil #'equal))
-(setq gptel-model 'gemini-2.5-pro)
+;; OpenRouter Backend
+(gptel-make-openai "OpenRouter"
+  :host "openrouter.ai"
+  :endpoint "/api/v1/chat/completions"
+  :stream t
+  :key (getenv "OPENROUTER_API_KEY")
+  :models '(openrouter/free
+            nvidia/nemotron-3-ultra-550b-a55b:free
+            thinkingmachines/inkling:free
+            poolside/laguna-s-2.1:free))
+
+;; gptel-quick: quick LLM lookups in a popup
+(use-package! gptel-quick
+  :defer t
+  :config
+  (setq gptel-quick-word-count 30       ; initial response length (~30 words)
+        gptel-quick-timeout 15))        ; popup stays for 15 seconds
+
+;; Keybinding: SPC l q  to quickly look up word/region via LLM
+(map! :leader
+      (:prefix ("l" . "LLM")
+       :desc "Quick lookup" "q" #'gptel-quick
+       :desc "Send to LLM" "s" #'gptel-send
+       :desc "Open chat" "c" #'gptel))
 
 ;; Configuring resize windows
 (map! "M-L" #'enlarge-window-horizontally
@@ -70,17 +109,17 @@
       "C-x C-x" #'evil-mode)
 
 ;; Make org-mode open html files in firefox
-'(org-file-apps
-   (quote
-     ((auto-mode . emacs)
-      ("\\.mm\\'" . default)
-      ("\\.x?html?\\'" . "/usr/bin/firefox %s")
-      ("\\.pdf\\'" . default))))
+(setq org-file-apps
+      '((auto-mode . emacs)
+        ("\\.mm\\'" . default)
+        ("\\.x?html?\\'" . "/usr/bin/firefox %s")
+        ("\\.pdf\\'" . default)))
 
-;; Key Bindings LSP
-(map! :map lsp-mode-map
+;; Key Bindings Eglot
+(map! :after eglot
+      :map eglot-mode-map
       :desc "Find References"
-      :n "gr" #'lsp-find-references)
+      :n "gr" #'xref-find-references)
 
 ;; Maximize Buffer with <leader> z
 (defun toggle-maximize-buffer ()
@@ -115,9 +154,6 @@
         telega-emoji-use-images nil)
   (map! :map telega-chat-button-map "h" nil))
 
-; Fix Tex shell escape
-(setq-default TeX-shell-escape t)
-
 ;; Doom exposes five (optional) variables for controlling fonts in Doom:
 ;;
 ;; - `doom-font' -- the primary font to use
@@ -130,8 +166,8 @@
 ;; See 'C-h v doom-font' for documentation and more examples of what they
 ;; accept. For example:
 ;;
-(setq doom-font (font-spec :family "Iosevka Term" :size 28 :weight 'light)
-      doom-variable-pitch-font (font-spec :family "Iosevka" :size 28 :weight 'light))
+(setq doom-font (font-spec :family "Geist Mono" :size 24 :weight 'light)
+      doom-variable-pitch-font (font-spec :family "Geist Mono" :size 24 :weight 'light))
 ;;
 ;; If you or Emacs can't find your font, use 'M-x describe-font' to look them
 ;; up, `M-x eval-region' to execute elisp code, and 'M-x doom/reload-font' to
@@ -184,6 +220,9 @@
 ;;
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
+
+;; rbx.el
+(use-package rbx)
 
 (use-package! competitive-companion
   :config
@@ -242,3 +281,6 @@
   ;; Bind to <leader> r
   (map! :leader
         :desc "CC Compile & Run" "r" #'my/cc-compile-and-run))
+
+
+(use-package! grip-mode)

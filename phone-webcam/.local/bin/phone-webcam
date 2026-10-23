@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+case ${1:-} in
+    start|stop|status)
+        exec systemctl --user "$1" phone-webcam.service
+        ;;
+esac
+
+if [[ ${1:-} == --help ]]; then
+    cat <<'EOF'
+Usage: phone-webcam [front|back] [IP:PORT]
+       phone-webcam start|stop|status
+
+Start a paired Android phone's camera over Wi-Fi.
+start/stop/status manage the front camera in the background.
+Without those commands, run in the foreground; Ctrl+C stops the camera.
+Use the connection address from the main Wireless debugging screen,
+not the port in the pairing dialog. Omit IP:PORT to discover your Edge 30.
+
+Select "Prisma Compatibility Camera" in your conferencing app after
+starting this command. Keep your laptop/headset microphone selected.
+Press Ctrl+C to stop streaming.
+EOF
+    exit 0
+fi
+
+facing=${1:-front}
+if [[ $# -gt 2 || ( $facing != front && $facing != back ) ]]; then
+    echo 'Usage: phone-webcam [front|back] [IP:PORT]' >&2
+    exit 2
+fi
+
+for tool in adb scrcpy; do
+    command -v "$tool" >/dev/null || { echo "Missing tool: $tool" >&2; exit 1; }
+done
+if [[ ! -r /dev/video90 || ! -w /dev/video90 ]]; then
+    echo 'The virtual camera /dev/video90 is missing or inaccessible.' >&2
+    exit 1
+fi
+if [[ $(cat /sys/class/video4linux/video90/name) != 'Prisma Compatibility Camera' ]]; then
+    echo '/dev/video90 is not the expected virtual camera; stopping.' >&2
+    exit 1
+fi
+
+address=${2:-}
+if [[ -z $address ]]; then
+    echo 'Looking for your Motorola Edge 30 on Wi-Fi...'
+    mapfile -t addresses < <(
+        timeout 10 avahi-browse --resolve --terminate --parsable _adb-tls-connect._tcp 2>/dev/null |
+        awk -F';' '$1 == "=" && $3 == "IPv4" && index($4, "adb-0082237264-") == 1 {print $8 ":" $9}' |
+        sort -u
+    )
+    if [[ ${#addresses[@]} -ne 1 ]]; then
+        echo 'Could not discover your phone. Enable Wireless debugging on the same Wi-Fi.' >&2
+        echo 'Alternatively: phone-webcam front IP:PORT (use the main Wireless debugging screen).' >&2
+        exit 1
+    fi
+    address=${addresses[0]}
+fi
+if [[ -n $address ]]; then
+    if [[ ! $address =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+$ ]]; then
+        echo 'Expected an IPv4 connection address in IP:PORT form.' >&2
+        exit 2
+    fi
+    # adb connect may return success even when its connection attempt fails.
+    # Check the actual transport before handing it to scrcpy.
+    if ! timeout 15 adb connect "$address" ||
+       [[ $(timeout 5 adb -s "$address" get-state 2>/dev/null) != device ]]; then
+        echo "Could not establish an authorized ADB connection to $address." >&2
+        echo 'If Wireless debugging is enabled and the address is current, pair again:' >&2
+        echo '  On the phone: Wireless debugging > Pair device with pairing code.' >&2
+        echo '  On this computer: adb pair IP:PAIRING_PORT' >&2
+        echo 'Then rerun phone-webcam; the pairing port differs from the connection port.' >&2
+        exit 1
+    fi
+fi
+
+echo 'Starting phone camera. In your meeting app, select Prisma Compatibility Camera.'
+echo 'Press Ctrl+C here to stop. Audio uses your usual laptop/headset microphone.'
+exec scrcpy --serial="$address" --video-source=camera \
+    --camera-facing="$facing" --camera-size=1280x720 --camera-fps=30 \
+    --capture-orientation=0 \
+    --video-codec=h264 --video-bit-rate=4M \
+    --no-audio --no-playback --v4l2-sink=/dev/video90

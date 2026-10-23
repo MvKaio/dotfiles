@@ -1,0 +1,120 @@
+# Noctalia v5 profile adapted from the v4 settings.json.
+# The v4 JSON files are retained alongside this file for rollback.
+
+[theme]
+mode = "dark"
+shell_mode = "dark"
+source = "custom"
+custom_palette = "Shinonome"
+pure_black_dark = false
+
+[theme.templates]
+builtin_ids = ["alacritty", "btop", "emacs", "gtk3", "gtk4", "hyprland", "kcolorscheme", "kitty", "qt", "starship"]
+community_ids = ["pywalfox", "steam"]
+
+[shell]
+font_family = "Archivo SemiCondensed"
+time_format = "{:%H:%M}"
+date_format = "%A, %x"
+corner_radius_scale = 0.53
+telemetry_enabled = true
+avatar_path = "/home/kaio/.face"
+clipboard_enabled = false
+
+[accessibility]
+ui_scale = 0.95
+
+[bar]
+order = ["default"]
+
+[bar.default]
+position = "top"
+enabled = true
+auto_hide = false
+show_on_workspace_switch = true
+reserve_space = true
+layer = "top"
+thickness = 38
+background_opacity = 0.93
+compositor_blur = true
+border_width = 0
+shadow = true
+radius = 12
+margin_ends = 5
+margin_edge = 5
+padding = 8
+widget_spacing = 6
+scale = 1.0
+font_scale = 1.0
+font_family = "Archivo SemiCondensed"
+font_weight = 700
+capsule = true
+capsule_fill = "surface_variant"
+capsule_thickness = 0.76
+capsule_radius = 8.0
+capsule_opacity = 1.0
+start = ["workspaces", "media"]
+center = ["clock"]
+end = ["tray", "network", "bluetooth", "battery", "brightness", "notifications", "control-center"]
+
+[widget.workspaces]
+style = "regular"
+show_labels = true
+label_source = "id"
+max_label_chars = 2
+focused_color = "primary"
+occupied_color = "secondary"
+empty_color = "secondary"
+focused_output_only = false
+labels_only_when_occupied = true
+hide_when_empty = false
+
+[widget.media]
+type = "media"
+artist_first = false
+hide_album_art = true
+hide_when_no_media = true
+title_scroll = "on_hover"
+max_length = 800
+
+[widget.clock]
+format = "{:%H:%M:%S}"
+vertical_format = "{:%H %M - %d %m}"
+tooltip_format = "{:%H:%M %a, %b %d}"
+
+[widget.tray]
+hide_passive = false
+
+[widget.network]
+
+[widget.bluetooth]
+
+[widget.battery]
+
+[widget.brightness]
+
+[osd]
+hide_delay_ms = 2000
+position = "top_right"
+background_opacity = 1.0
+
+[wallpaper]
+enabled = true
+directory = "/home/kaio/Pictures/Wallpapers"
+fill_mode = "crop"
+transition_duration = 1500
+
+[nightlight]
+enabled = true
+force = false
+temperature_day = 6500
+temperature_night = 5372
+
+# Supplement the built-in Emacs template with the Dired faces used by Doom.
+# Index 1 makes this render after the built-in Emacs template (index 0).
+[theme.templates.user.emacs_dired]
+input_path = "templates/emacs-dired.el"
+output_path = "$XDG_CONFIG_HOME/doom/themes/noctalia-theme.el"
+index = 1
+post_hook = "bash '/usr/share/noctalia/assets/templates/emacs/apply.sh'"
+hook_async = false

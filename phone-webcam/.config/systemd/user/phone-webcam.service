@@ -1,0 +1,8 @@
+[Unit]
+Description=Motorola Edge 30 Wi-Fi webcam
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/phone-webcam front
+KillSignal=SIGINT
+TimeoutStopSec=10

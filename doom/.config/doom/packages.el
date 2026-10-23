@@ -16,9 +16,12 @@
 (package! rainbow-mode)
 (package! competitive-companion
   :recipe (:host github :repo "luishgh/competitive-companion.el"))
+(package! rbx
+  :recipe (:host github :repo "luishgh/rbx.el"))
 (package! typst-ts-mode :recipe (:host codeberg :repo "meow_king/typst-ts-mode"))
 (package! typst-preview
   :recipe (:host github :repo "havarddj/typst-preview.el"))
+(package! xterm-color)
 (package! telega)
 (package! org-reveal)
 (package! timu-rouge-theme)
@@ -26,6 +29,8 @@
 (package! shell-maker)
 (package! acp)
 (package! agent-shell)
+
+(package! grip-mode)
 
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
 ;; (package! some-package)

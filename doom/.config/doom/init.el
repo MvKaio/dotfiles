@@ -1,5 +1,13 @@
 ;;; init.el -*- lexical-binding: t; -*-
 
+;; Emacs 31 no longer preloads `define-compilation-mode'.  Some package
+;; autoload files (notably typst-ts-mode's) still expect it to be available.
+(when (>= emacs-major-version 31)
+  (require 'compile)
+  ;; rbx's generated autoloads expand a Transient prefix, so make that macro
+  ;; available before Doom registers package autoloads during `doom sync'.
+  (require 'transient))
+
 ;; This file controls what Doom modules are enabled and what order they load
 ;; in. Remember to run 'doom sync' after modifying it!
 
@@ -31,7 +39,7 @@
        :ui
        ;;deft              ; notational velocity for Emacs
        doom              ; what makes DOOM look the way it does
-       doom-dashboard    ; a nifty splash screen for Emacs
+       dashboard         ; a nifty splash screen for Emacs
        ;;doom-quit         ; DOOM quit-message prompts when you quit Emacs
        ;;(emoji +unicode)  ; 🙂
        hl-todo           ; highlight TODO/FIXME/NOTE/DEPRECATED/HACK/REVIEW
@@ -162,7 +170,7 @@
        ;;plantuml          ; diagrams for confusing people more
        ;;graphviz          ; diagrams for confusing yourself even more
        ;;purescript        ; javascript, but functional
-       (python +lsp +pyright)            ; beautiful is better than ugly
+       (python +lsp +pyright +uv)            ; beautiful is better than ugly
        qt                ; the 'cutest' gui framework ever
        ;;racket            ; a DSL for DSLs
        ;;raku              ; the artist formerly known as perl6

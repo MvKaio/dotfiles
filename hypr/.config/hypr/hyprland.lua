@@ -7,7 +7,7 @@ local externalMonitor = "HDMI-A-1"
 
 hl.monitor({
     output   = notebookMonitor,
-    mode     = "preferred",
+    mode     = "2880x1800@60",
     position = "auto",
     scale    = 1.33,
     bitdepth = 8,
@@ -41,7 +41,7 @@ hl.config({
 local terminal    = "kitty"
 local editor      = "emacsclient -c"
 local fileManager = "dolphin"
-local menu        = "qs -c noctalia-shell ipc call launcher toggle"
+local menu        = "noctalia msg panel-toggle launcher"
 local tidalHiFi   = "tidal-hifi --enable-features=UseOzonePlatform --ozone-platform-hint=auto --enable-features=WaylandWindowDecorations"
 
 local musicWorkspace = "Music"
@@ -74,11 +74,12 @@ hl.on("hyprland.start", function()
         hl.exec_cmd("systemctl --user start xdg-desktop-portal.service")
 
         hl.exec_cmd("systemctl --user start hyprpolkitagent")
-        hl.exec_cmd('qs -c "noctalia-shell"')
+        hl.exec_cmd("noctalia")
         hl.exec_cmd("udiskie")
         hl.exec_cmd("hypridle")
         hl.exec_cmd("hyprsunset")
         hl.exec_cmd("hyprpm reload -n")
+        hl.exec_cmd("kbuildsycoca6 --noincremental")
 
         -- hl.exec_cmd("emacs --bg-daemon")
         hl.dispatch(hl.dsp.exec_raw("env -u DESKTOP_STARTUP_ID -u XDG_ACTIVATION_TOKEN emacs --bg-daemon"))
@@ -104,6 +105,7 @@ hl.env("EDITOR", editor)
 hl.env("XDG_SESSION_TYPE", "wayland")
 hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
 hl.env("XDG_SESSION_DESKTOP", "Hyprland")
+hl.env("XDG_MENU_PREFIX", "gnome-")
 
 
 -----------------------
@@ -351,9 +353,9 @@ hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = tr
 hl.bind("XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = true })
 
-hl.bind(mainMod .. " + period", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call launcher emoji"),           { locked = true })
+hl.bind(mainMod .. " + period", hl.dsp.exec_cmd("noctalia msg panel-toggle launcher /emo"),           { locked = true })
 hl.bind("CTRL + SHIFT + K",     hl.dsp.exec_cmd("loginctl lock-session"),                                  { locked = true })
-hl.bind("CTRL + SHIFT + L",     hl.dsp.exec_cmd("qs -c noctalia-shell ipc call sessionMenu lockAndSuspend"), { locked = true })
+hl.bind("CTRL + SHIFT + L",     hl.dsp.exec_cmd("noctalia msg session lock-and-suspend"), { locked = true })
 
 hl.bind("SHIFT + Print", hl.dsp.exec_cmd([[grim -g "$(slurp)" - | wl-copy && wl-paste > ~/Pictures/Screenshots/Screenshot-$(date +%F_%T).png | dunstify "Screenshot of the region taken" -t 100]]))
 hl.bind("Print",         hl.dsp.exec_cmd([[grim - | wl-copy && wl-paste > ~/Pictures/Screenshots/Screenshot-$(date +%F_%T).png | dunstify "Screenshot of whole screen taken" -t 100]]))
@@ -399,6 +401,14 @@ hl.window_rule({
     workspace = musicSpecialWorkspace,
 })
 
+hl.window_rule({
+    name  = "float-pavucontrol",
+    match = { class = "^org\\.pulseaudio\\.pavucontrol$" },
+
+    float = true,
+    size  = "1165 716",
+})
+
 require("noctalia.colors")
 
 -- hy3 is using its defaults. Add plugin-specific options here if needed:
@@ -412,3 +422,9 @@ require("noctalia.colors")
 --     },
 -- })
 --
+
+-- For Noctalia Color templates
+local has_noctalia, noctalia = pcall(require, "noctalia")
+if has_noctalia then
+    noctalia.apply_theme()
+end
